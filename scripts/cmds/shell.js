@@ -4,12 +4,12 @@ module.exports = {
   config: {
     name: "shell",
     version: "1.0",
-    author: "Samir",
+    author: "Opu",
     countDown: 5,
     role: 0,
     shortDescription: "Execute shell commands",
     longDescription: "",
-    category: "shell",
+    category: "utility",
     guide: {
       vi: "{p}{n} <command>",
       en: "{p}{n} <command>"
