@@ -7,7 +7,7 @@ module.exports = {
     name: "imgur",
     version: "1.0",
     author: "nexo_here",
-    category: "tools",
+    category: "image",
     shortDescription: "Upload replied image to Imgur & get link",
     longDescription: "Reply to an image with this command to get its Imgur link",
     guide: "{pn}imgur (reply to an image)"
