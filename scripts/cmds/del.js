@@ -4,7 +4,7 @@ module.exports = {
     aliases: ["del"],
     author: "nexo_here",
 role: 2,
-    category: "system"
+    category: "owner"
   },
 
   onStart: async function ({ api, event, args }) {
