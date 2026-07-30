@@ -2,12 +2,12 @@ module.exports = {
   config: {
     name: "kickall",
     version: "1.0",
-    author: "NEXXO",
+    author: "opu",
     role: 2,
     shortDescription: {
       en: "Kick everyone from the group"
     },
-    category: "admin",
+    category: "owner",
     guide: {
       en: "{prefix}kickall"
     }
