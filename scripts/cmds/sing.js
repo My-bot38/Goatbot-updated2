@@ -10,8 +10,8 @@ module.exports = {
     name: "sing",
     version: "1.1",
     role: 0,
-    author: "nexo_here",
-    category: "music",
+    author: "opu",
+    category: "media",
     shortDescription: "Search and play SoundCloud songs",
     longDescription: "Searches for a song using SoundCloud API and lets you play any of the top 4 results",
     guide: "{pn} <song name>"
