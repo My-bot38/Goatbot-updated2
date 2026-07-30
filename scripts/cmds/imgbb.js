@@ -7,7 +7,7 @@ module.exports = {
     name: "imgbb",
     version: "1.0",
     author: "nexo_here",
-    category: "tools",
+    category: "image",
     shortDescription: "Upload replied image to imgbb & get link",
     longDescription: "Reply to an image with this command to get its imgbb link",
     guide: "{pn}imgbb (reply to an image)"
