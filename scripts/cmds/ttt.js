@@ -182,7 +182,7 @@ module.exports = {
     aliases: ["tictactoe"],
     version: "2.0",
     author: "Vex_Kshitiz",
-    category: "game",
+    category: "fun",
   },
   onStart: async function ({ event, api }) {
     const playerID = event.senderID;
