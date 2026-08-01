@@ -14,7 +14,7 @@ module.exports = {
     longDescription: {
       en: "AI thinks of a number between 1 and 10. Try to guess it!",
     },
-    category: "game",
+    category: "fun",
     guide: {
       en: "{p}aiguess [number]",
     },
