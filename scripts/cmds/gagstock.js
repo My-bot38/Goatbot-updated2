@@ -66,7 +66,7 @@ module.exports = {
     countDown: 5,
     role: 0,
     shortDescription: "Track Grow A Garden stock",
-    category: "game",
+    category: "fun",
     guide: {
       en: "gagstock on | gagstock off | gagstock fav add <item> | gagstock lastseen | gagstock predict"
     }
