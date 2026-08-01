@@ -1,92 +1,126 @@
-const axios = require('axios');
+const axios = require("axios");
+
+// simple memory score (bot restart হলে reset হবে)
+const userScores = {};
 
 module.exports = {
     config: {
-        name: 'quiz',
-        version: '1.0',
-        author: 'Farhan',
+        name: "quiz",
+        version: "2.0",
+        author: "OPU",
         countDown: 5,
         prefix: true,
-        adminOnly: false,
-        description: 'Hard-level boolean trivia quiz (English)',
-        category: 'game',
+        description: "Advanced Quiz System",
+        category: "fun",
         guide: {
-            en: '{pn}quiz'
+            en: "{pn}quiz [easy/medium/hard]"
         }
     },
 
-    onStart: async ({ api, event }) => {
+    onStart: async ({ api, event, args }) => {
         const { threadID, senderID } = event;
 
-        try {
-            const res = await axios.get('https://sus-apis.onrender.com/api/quiz?amount=1&difficulty=hard&type=boolean');
-            const questionData = res.data?.results?.[0];
+        const difficulty = ["easy", "medium", "hard"].includes(args[0])
+            ? args[0]
+            : "medium";
 
-            if (!res.data || !questionData) {
-                return api.sendMessage('❌ Could not load quiz. Try again later.', threadID);
+        try {
+            const res = await axios.get(
+                `https://sus-apis.onrender.com/api/quiz?amount=1&difficulty=${difficulty}&type=boolean`
+            );
+
+            if (!res.data?.results?.[0]) {
+                return api.sendMessage("❌ Quiz load failed.", threadID);
             }
 
-            const options = ['True', 'False'];
-            const correctIndex = questionData.correct_answer.toLowerCase() === 'true' ? 0 : 1;
+            const data = res.data.results[0];
 
-            const cleanCategory = questionData.category.replace(/&amp;/g, '&');
-            const question = questionData.question.replace(/&quot;/g, '"').replace(/&#039;/g, "'");
+            const clean = (t) =>
+                t.replace(/&quot;/g, '"')
+                 .replace(/&#039;/g, "'")
+                 .replace(/&amp;/g, "&");
 
-            const optionText = `a) True\nb) False`;
+            const question = clean(data.question);
+            const category = clean(data.category);
 
-            const quizMsg = `🧠 Hard Quiz: [${cleanCategory}]\n\n❓ ${question}\n\n${optionText}\n\nReply with a or b to answer.`;
+            const correctIndex =
+                data.correct_answer.toLowerCase() === "true" ? 0 : 1;
 
-            const sentMsg = await api.sendMessage(quizMsg, threadID);
+            const msg = `🧠 Quiz (${difficulty.toUpperCase()})
+📂 ${category}
 
-            global.client.handleReply.push({
-                name: 'quiz',
-                messageID: sentMsg.messageID,
-                threadID,
-                senderID,
-                correctIndex,
-                options,
-                timeout: setTimeout(async () => {
-                    const idx = global.client.handleReply.findIndex(e => e.messageID === sentMsg.messageID && e.name === 'quiz');
-                    if (idx >= 0) global.client.handleReply.splice(idx, 1);
-                    await api.sendMessage('⏰ Time is up! You didn’t answer.', threadID);
-                }, 60000)
+❓ ${question}
+
+a) True
+b) False
+
+⏱️ Time: 30s`;
+
+            api.sendMessage(msg, threadID, (err, info) => {
+                if (err) return;
+
+                global.client.handleReply.push({
+                    name: "quiz",
+                    messageID: info.messageID,
+                    author: senderID,
+                    correctIndex,
+                    timeout: setTimeout(() => {
+                        const i = global.client.handleReply.findIndex(
+                            x => x.messageID === info.messageID
+                        );
+                        if (i !== -1) {
+                            global.client.handleReply.splice(i, 1);
+                            api.sendMessage("⏰ Time up!", threadID);
+                        }
+                    }, 30000)
+                });
             });
 
-            console.log(`📌 Hard quiz sent to ${senderID} in thread ${threadID}`);
-
-        } catch (error) {
-            console.error(`❌ Quiz fetch error: ${error.message}`);
-            api.sendMessage('❌ Failed to fetch quiz. Try again later.', threadID);
+        } catch (e) {
+            api.sendMessage("❌ API error.", threadID);
         }
     },
 
     handleReply: async ({ event, api, handleReply }) => {
-        const reply = event.body.trim().toLowerCase();
-        const { threadID, senderID, messageID } = event;
+        const { senderID, threadID, body, messageID } = event;
 
-        if (!event.messageReply || event.messageReply.messageID !== handleReply.messageID) {
-            return api.sendMessage('⚠️ This is not a reply to the quiz.', threadID, messageID);
+        if (senderID !== handleReply.author) return;
+
+        const ans = body.trim().toLowerCase();
+        if (!["a", "b"].includes(ans)) {
+            return api.sendMessage("⚠️ Reply only a or b", threadID, messageID);
         }
 
-        if (!['a', 'b'].includes(reply)) {
-            return api.sendMessage('⚠️ Please reply with only "a" or "b".', threadID, messageID);
+        const index = global.client.handleReply.findIndex(
+            x => x.messageID === handleReply.messageID
+        );
+
+        if (index !== -1) {
+            clearTimeout(global.client.handleReply[index].timeout);
+            global.client.handleReply.splice(index, 1);
         }
 
-        const idx = global.client.handleReply.findIndex(e => e.messageID === handleReply.messageID && e.name === 'quiz');
-        if (idx >= 0) {
-            clearTimeout(global.client.handleReply[idx].timeout);
-            global.client.handleReply.splice(idx, 1);
-        }
+        const userIndex = ans === "a" ? 0 : 1;
 
-        const userIndex = { a: 0, b: 1 }[reply];
-        const correctAnswer = handleReply.options[handleReply.correctIndex];
+        // score init
+        if (!userScores[senderID]) userScores[senderID] = 0;
 
         if (userIndex === handleReply.correctIndex) {
-            await api.sendMessage('✅ Correct! Well done.', threadID, messageID);
-        } else {
-            await api.sendMessage(`❌ Incorrect.\nThe correct answer was: ${correctAnswer}`, threadID, messageID);
-        }
+            userScores[senderID] += 10;
 
-        console.log(`📌 User ${senderID} answered "${reply}" for quiz in thread ${threadID}. Correct: ${userIndex === handleReply.correctIndex}`);
+            return api.sendMessage(
+                `✅ Correct!\n🎯 Score: ${userScores[senderID]}`,
+                threadID,
+                messageID
+            );
+        } else {
+            userScores[senderID] -= 5;
+
+            return api.sendMessage(
+                `❌ Wrong!\n💔 Score: ${userScores[senderID]}`,
+                threadID,
+                messageID
+            );
+        }
     }
 };
