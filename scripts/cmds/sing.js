@@ -1,110 +1,80 @@
 const axios = require("axios");
-const fs = require("fs");
-const path = require("path");
 
-const apiKey = "66e0cfbb-62b8-4829-90c7-c78cacc72ae2";
-let searchCache = {};
+const mahmud = async () => {
+        const base = await axios.get("https://raw.githubusercontent.com/mahmudx7/HINATA/main/baseApiUrl.json");
+        return base.data.mahmud;
+};
 
 module.exports = {
-  config: {
-    name: "sing",
-    version: "1.1",
-    role: 0,
-    author: "opu",
-    category: "media",
-    shortDescription: "Search and play SoundCloud songs",
-    longDescription: "Searches for a song using SoundCloud API and lets you play any of the top 4 results",
-    guide: "{pn} <song name>"
-  },
+        config: {
+                name: "sing",
+                version: "1.7",
+                author: "MahMUD",
+                countDown: 10,
+                role: 0,
+                description: {
+                        bn: "যেকোনো গান সার্চ করে অডিও ফাইল ডাউনলোড করুন",
+                        en: "Search and download any song as an audio file",
+                        vi: "Tìm kiếm và tải xuống bất kỳ bài hát nào dưới dạng tệp âm thanh"
+                },
+                category: "music",
+                guide: {
+                        bn: '   {pn} <গানের নাম>: গান ডাউনলোড করতে নাম লিখুন',
+                        en: '   {pn} <song name>: Enter song name to download',
+                        vi: '   {pn} <tên bài hát>: Nhập tên bài hát để tải xuống'
+                }
+        },
 
-  onStart: async function ({ api, event, args }) {
-    const query = args.join(" ");
-    if (!query) return api.sendMessage("❌ Please enter a song title.", event.threadID, event.messageID);
+        langs: {
+                bn: {
+                        noInput: "× বেবি, গানের নাম তো দাও! 🎵\nউদাহরণ: {pn} shape of you",
+                        success: "✅ | এই নাও তোমার গান বেবি <😘\n• 𝐒𝐨𝐧𝐠: %1",
+                        error: "× সমস্যা হয়েছে: %1। প্রয়োজনে Contact MahMUD।"
+                },
+                en: {
+                        noInput: "× Baby, please provide a song name! 🎵\nExample: {pn} shape of you",
+                        success: "✅ | Here's your requested song baby <😘\n• 𝐒𝐨𝐧𝐠: %1",
+                        error: "× API error: %1. Contact MahMUD for help."
+                },
+                vi: {
+                        noInput: "× Cưng ơi, vui lòng cung cấp tên bài hát! 🎵\nVí dụ: {pn} shape of you",
+                        success: "✅ | Bài hát của cưng đây <😘\n• 𝐁𝐚̀𝐢 𝐡𝐚́𝐭: %1",
+                        error: "× Lỗi: %1. Liên hệ MahMUD để hỗ trợ."
+                }
+        },
 
-    const searchUrl = `https://kaiz-apis.gleeze.com/api/soundcloud-search?title=${encodeURIComponent(query)}&apikey=${apiKey}`;
+        onStart: async function ({ api, event, args, message, getLang }) {
+                const authorName = String.fromCharCode(77, 97, 104, 77, 85, 68);
+                if (this.config.author !== authorName) {
+                        return api.sendMessage("You are not authorized to change the author name.", event.threadID, event.messageID);
+                }
 
-    try {
-      const res = await axios.get(searchUrl);
-      const results = res.data?.results;
+                const query = args.join(" ");
+                if (!query) return message.reply(getLang("noInput"));
 
-      if (!results || results.length === 0) {
-        return api.sendMessage("❌ No songs found.", event.threadID, event.messageID);
-      }
+                try {
+                        api.setMessageReaction("⌛", event.messageID, () => {}, true);
 
-      const top4 = results.slice(0, 4);
-      let msg = `🎵 Search results for: "${query}"\n\n`;
+                        const baseUrl = await mahmud();
+                        const apiUrl = `${baseUrl}/api/song/mahmud?query=${encodeURIComponent(query)}`;
 
-      top4.forEach((song, index) => {
-        msg += `${index + 1}. ${song.title} — ${song.artist} (${song.duration})\n`;
-      });
+                        const response = await axios({
+                                method: "GET",
+                                url: apiUrl,
+                                responseType: "stream"
+                        });
 
-      msg += `\nReply with a number (1-4) to play the song.`;
-      searchCache[event.senderID] = top4;
+                        return message.reply({
+                                body: getLang("success", query),
+                                attachment: response.data
+                        }, () => {
+                                api.setMessageReaction("🪽", event.messageID, () => {}, true);
+                        });
 
-      return api.sendMessage(msg, event.threadID, (err, info) => {
-        global.GoatBot.onReply.set(info.messageID, {
-          commandName: "sing",
-          author: event.senderID,
-          messageID: info.messageID // store for unsend
-        });
-      });
-
-    } catch (err) {
-      console.error(err);
-      return api.sendMessage("❌ Failed to fetch songs.", event.threadID, event.messageID);
-    }
-  },
-
-  onReply: async function ({ api, event, Reply }) {
-    if (event.senderID !== Reply.author) return;
-
-    const choice = parseInt(event.body);
-    if (isNaN(choice) || choice < 1 || choice > 4) {
-      return api.sendMessage("❌ Please reply with a number between 1 and 4.", event.threadID, event.messageID);
-    }
-
-    const selected = searchCache[event.senderID][choice - 1];
-    if (!selected) return api.sendMessage("❌ Song not found in cache.", event.threadID, event.messageID);
-
-    const dlUrl = `https://kaiz-apis.gleeze.com/api/soundcloud-dl?url=${encodeURIComponent(selected.url)}&apikey=${apiKey}`;
-
-    try {
-      const dlRes = await axios.get(dlUrl);
-      const audioUrl = dlRes.data?.downloadUrl;
-      const title = dlRes.data?.title || selected.title;
-
-      if (!audioUrl) return api.sendMessage("❌ Couldn't fetch download URL.", event.threadID, event.messageID);
-
-      const filePath = path.join(__dirname, "tmp", `${Date.now()}.mp3`);
-      const writer = fs.createWriteStream(filePath);
-
-      const audioStream = await axios({
-        url: audioUrl,
-        method: "GET",
-        responseType: "stream"
-      });
-
-      audioStream.data.pipe(writer);
-
-      writer.on("finish", () => {
-        // Unsend the search message before sending the audio
-        api.unsendMessage(Reply.messageID, (err) => {
-          if (err) console.log("⚠️ Failed to unsend search message:", err);
-
-          api.sendMessage({
-            body: `🎶 Now Playing: ${title}`,
-            attachment: fs.createReadStream(filePath)
-          }, event.threadID, () => fs.unlinkSync(filePath), event.messageID);
-        });
-      });
-
-      writer.on("error", () => {
-        return api.sendMessage("❌ Failed to download song.", event.threadID, event.messageID);
-      });
-
-    } catch (err) {
-      console.error(err);
-      return api.sendMessage("❌ Error playing the song.", event.threadID, event.messageID);
-    }
-  }
+                } catch (err) {
+                        console.error("Sing Error:", err);
+                        api.setMessageReaction("❌", event.messageID, () => {}, true);
+                        return message.reply(getLang("error", err.message));
+                }
+        }
 };
