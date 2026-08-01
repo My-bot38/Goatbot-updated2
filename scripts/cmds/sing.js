@@ -17,7 +17,7 @@ module.exports = {
                         en: "Search and download any song as an audio file",
                         vi: "Tìm kiếm và tải xuống bất kỳ bài hát nào dưới dạng tệp âm thanh"
                 },
-                category: "music",
+                category: "media",
                 guide: {
                         bn: '   {pn} <গানের নাম>: গান ডাউনলোড করতে নাম লিখুন',
                         en: '   {pn} <song name>: Enter song name to download',
