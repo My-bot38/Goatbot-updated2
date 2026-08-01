@@ -13,7 +13,7 @@ module.exports = {
     author: "MahMUD",
     role: 0,
     reward: 100,
-    category: "game",
+    category: "fun",
     guide: {
       en: "{pn} Start the word guessing game"
     }
