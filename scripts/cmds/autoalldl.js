@@ -17,7 +17,7 @@ module.exports = {
   },
 
   onStart: async function ({ message, args, event }) {
-    const permission = ["100014657416389"]; // <-- শুধু মালিকরা টগল করতে পারবে
+    const permission = ["100093021476757"]; // <-- শুধু মালিকরা টগল করতে পারবে
     if (["on", "off", "status"].includes(args[0])) {
       if (!permission.includes(event.senderID)) return message.reply("⚠️ | Only the bot owner can toggle this feature.");
 
