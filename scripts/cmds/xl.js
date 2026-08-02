@@ -8,7 +8,7 @@ module.exports = {
     longDescription: {
       en: 'Generate an image from text using SDXL.'
     },
-    category: 'AI-IMAGE',
+    category: 'ai',
     guide: {
       en: '{pn} prompt [--ar=<ratio>] or [==ar <ratio>]'
     }
