@@ -5,7 +5,7 @@ module.exports = {
     author: "OPU",
     shortDescription: { en: "Slot Game" },
     longDescription: { en: "Advanced slot game with clean UI & animation feel" },
-    category: "game",
+    category: "fun",
   },
 
   langs: {
