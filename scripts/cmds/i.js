@@ -11,7 +11,7 @@ module.exports = {
       vi: "",
       en: "Generate multiple AI images from text.",
     },
-    category: "AI-IMAGE",
+    category: "ai",
     guide: {
       vi: "",
       en: "Example: {pn} cute girl | 4 (will generate 4 images)",
