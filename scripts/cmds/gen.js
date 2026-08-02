@@ -11,7 +11,7 @@ module.exports = {
     role: 0,
     shortDescription: "Generate image from prompt",
     longDescription: "Generate a new image based on your prompt.",
-    category: "AI-IMAGE",
+    category: "ai",
     guide: "{p}gen [prompt]"
   },
 
