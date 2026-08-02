@@ -1,50 +1,71 @@
 const axios = require("axios");
+const fs = require("fs");
+const path = require("path");
+
 const baseApiUrl = async () => {
-  const base = await axios.get(
-    `https://raw.githubusercontent.com/Blankid018/D1PT0/main/baseApiUrl.json`,
-  );
-  return base.data.api;
+    const base = await axios.get("https://raw.githubusercontent.com/mahmudx7/HINATA/main/baseApiUrl.json");
+    return base.data.mahmud;
 };
 
-module.exports.config = {
-  name: "fluxpro",
-  version: "2.0",
-  role: 2,
-  author: "frnwot",
-  description: "Generate images with Flux.1 Pro",
-  category: "ai",
-  preimum: true,
-  guide: "{pn} [prompt] --ratio 1024x1024\n{pn} [prompt]",
-  countDown: 15,
-};
+module.exports = {
+    config: {
+        name: "fluxpro",
+        version: "2.0",
+        author: "OPU",
+        countDown: 15,
+        role: 0,
+        shortDescription: "Generate AI image using Flux Pro",
+        category: "ai",
+        guide: {
+            en: "{pn} <prompt> --ratio <value>\nExample: {pn} anime girl --ratio 1:1"
+        }
+    },
 
-module.exports.onStart = async ({ message, event, args, api }) => {
-  try {
-  const prompt = args.join(" ");
-  /*let prompt2, ratio;
-  if (prompt.includes("--ratio")) {
-    const parts = prompt.split("--ratio");
-    prompt2 = parts[0].trim();
-    ratio = parts[1].trim();
-  } else {
-    prompt2 = prompt;
-    ratio = "1024x1024";
-  }*/
-    const startTime = new Date().getTime();
-    const ok = message.reply('wait bratuha <⌛')
-    api.setMessageReaction("⌛", event.messageID, (err) => {}, true);
-    const apiUrl = `${await baseApiUrl()}/flux11?prompt=${prompt}`;
+    onStart: async function ({ api, event, args, message }) {
 
-    api.setMessageReaction("✅", event.messageID, (err) => {}, true);
-     message.unsend(ok.messageID)
-    const attachment = await global.utils.getStreamFromURL(apiUrl);
-    const endTime = new Date().getTime();
-    await message.reply({
-          body: `Here's your image\nModel Name: "Flux.1 Pro"\nTime Taken: ${(endTime - startTime) / 1000} second/s`, 
-          attachment
-      });
-  } catch (e) {
-    console.log(e);
-    message.reply("Error: " + e.message);
-  }
+        const fullArgs = args.join(" ");
+        if (!fullArgs) {
+            return message.reply("❌ Please provide a prompt!");
+        }
+
+        const [prompt, ratio = "1:1"] = fullArgs.includes("--ratio")
+            ? fullArgs.split("--ratio").map(s => s.trim())
+            : [fullArgs, "1:1"];
+
+        const cacheDir = path.join(__dirname, "cache");
+        const filePath = path.join(cacheDir, `fluxpro_${Date.now()}.png`);
+        if (!fs.existsSync(cacheDir)) fs.mkdirSync(cacheDir);
+
+        try {
+            api.setMessageReaction("⏳", event.messageID, () => {}, true);
+            const waitMsg = await message.reply("🔄 Generating image...");
+
+            const baseUrl = await baseApiUrl();
+            const url = `${baseUrl}/api/fluxpro?prompt=${encodeURIComponent(prompt)}&ratio=${ratio}`;
+
+            const response = await axios.get(url, {
+                responseType: "arraybuffer",
+                timeout: 120000
+            });
+
+            fs.writeFileSync(filePath, Buffer.from(response.data));
+
+            if (waitMsg?.messageID) api.unsendMessage(waitMsg.messageID);
+            api.setMessageReaction("✅", event.messageID, () => {}, true);
+
+            return message.reply({
+                body: `✅ Done\n📝 Prompt: ${prompt}\n📐 Ratio: ${ratio}`,
+                attachment: fs.createReadStream(filePath)
+            }, () => {
+                if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+            });
+
+        } catch (err) {
+            console.error("Flux Pro Error:", err);
+            api.setMessageReaction("❌", event.messageID, () => {}, true);
+            if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+
+            return message.reply("❌ Failed to generate image. Try again later.");
+        }
+    }
 };
