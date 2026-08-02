@@ -4,14 +4,14 @@ const fs = require("fs-extra");
 module.exports = {
   config: {
     name: "sdxl",
-    aliases: [],
+    aliases: "sdxl",
     version: "1.0",
-    author: "nexo_here",
+    author: "opu",
     countDown: 10,
     role: 0,
     shortDescription: "Generate image with SDXL Light",
     longDescription: "Generate AI image using SDXL Light API with various styles",
-    category: "AI-IMAGE",
+    category: "ai",
     guide: {
       en: "{pn} <prompt> | <style>\n\nAvailable styles:\n- 3D Model\n- Analog Film\n- Anime\n- Cinematic\n- Comic Book"
     }
