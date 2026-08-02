@@ -1,49 +1,53 @@
 module.exports = {
   config: {
     name: "slot",
-    version: "4.0",
-    author: "OPU (Fixed)",
-    shortDescription: { en: "Slot game" },
-    longDescription: { en: "Advanced Slot game with jackpot + animation." },
-    category: "fun",
+    version: "5.0",
+    author: "OPU",
+    shortDescription: { en: "Slot Game" },
+    longDescription: { en: "Advanced slot game with clean UI & animation feel" },
+    category: "game",
   },
 
   langs: {
     en: {
-      invalid_amount: "❌ Enter a valid positive amount.",
-      not_enough_money: "💸 Bro you're broke! Check balance 😤",
+      invalid_amount: "❌ Enter a valid amount",
+      not_enough_money: "❌ Not enough balance!",
       spinning: "🎰 Spinning...",
-      result_win: "💰 SLOT RESULT 🎰\n\n🎉 YOU WON!\n💸 Amount: $%1",
-      result_lose: "💰 SLOT RESULT 🎰\n\n😢 YOU LOST!\n💸 Lost: $%1",
-      jackpot: "🔥 JACKPOT!!! 🔥\n\n💥 BIG WIN!\n💸 Amount: $%1\n🎯 Symbol: %2",
     },
   },
 
-  onStart: async function ({ args, message, event, usersData, getLang }) {
+  onStart: async function ({ args, message, event, usersData, getLang, api }) {
     const { senderID } = event;
     const bet = parseInt(args[0]);
 
+    // ❌ invalid input
     if (isNaN(bet) || bet <= 0) {
       return message.reply(getLang("invalid_amount"));
     }
 
     const userData = await usersData.get(senderID);
 
+    // ❌ not enough money
     if (bet > userData.money) {
-      return message.reply(getLang("not_enough_money"));
+      return message.reply(
+        `❌ Not enough balance!\n\n💰 Your Balance: $${userData.money}\n💸 You Tried: $${bet}`
+      );
     }
 
-    // deduct first (fair play)
-    await usersData.set(senderID, { money: userData.money - bet });
+    // 💸 cut balance first
+    await usersData.set(senderID, {
+      money: userData.money - bet,
+    });
 
-    const slots = ["🍓","🍆","🍎","🍌","🍍","🥭","🫐","🍊","🍋","🍒","🥞","🍔"];
+    const slots = ["🍓","🍆","🍎","🍌","🍍","🥭","🫐","🍊","🍋","🍒"];
 
-    // spinning msg
+    // 🎰 spinning message
     const spinMsg = await message.reply(getLang("spinning"));
 
-    // delay for animation feel
+    // ⏳ delay for animation feel
     await new Promise(res => setTimeout(res, 1500));
 
+    // 🎲 random slots
     const s1 = rand(slots);
     const s2 = rand(slots);
     const s3 = rand(slots);
@@ -51,46 +55,65 @@ module.exports = {
 
     const win = calc(s1, s2, s3, s4, bet);
 
-    let finalMoney = userData.money - bet + win;
-    await usersData.set(senderID, { money: finalMoney });
+    const finalMoney = userData.money - bet + win;
 
-    let resultText = "";
+    await usersData.set(senderID, {
+      money: finalMoney,
+    });
+
+    // 🎯 RESULT UI
+    let result = `🎰 𝗦𝗟𝗢𝗧 𝗥𝗘𝗦𝗨𝗟𝗧\n\n`;
+    result += `┏━━━━━━━━━━━┓\n`;
+    result += `  ${s1} | ${s2} | ${s3} | ${s4}\n`;
+    result += `┗━━━━━━━━━━━┛\n`;
 
     if (win > 0) {
       if (s1 === s2 && s2 === s3 && s3 === s4) {
-        resultText = getLang("jackpot", win, s1);
+        result += `\n🔥 𝗝𝗔𝗖𝗞𝗣𝗢𝗧!!! +$${win}`;
       } else {
-        resultText = getLang("result_win", win);
+        result += `\n🎉 𝗪𝗜𝗡: +$${win}`;
       }
     } else {
-      resultText = getLang("result_lose", bet);
+      result += `\n😢 𝗟𝗢𝗦𝗦: -$${bet}`;
     }
 
-    const slotView = `\n\n[ ${s1} | ${s2} | ${s3} | ${s4} ]\n\n💰 Balance: $${finalMoney}`;
+    result += `\n\n💰 𝗕𝗮𝗹𝗮𝗻𝗰𝗲: $${finalMoney}`;
 
-    return message.edit(resultText + slotView, spinMsg.messageID);
+    // 🧹 remove spinning msg
+    try {
+      await api.unsendMessage(spinMsg.messageID);
+    } catch (e) {}
+
+    return message.reply(result);
   },
 };
 
-// random pick
+// 🎲 random
 function rand(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-// winning logic
+// 🧠 win logic
 function calc(a, b, c, d, bet) {
+  // jackpot (4 same)
   if (a === b && b === c && c === d) {
-    if (a === "🍆" || a === "🍍") return bet * 20; // mega jackpot
+    if (a === "🍆" || a === "🍍") return bet * 20;
     return bet * 10;
   }
 
+  // 3 match
   if ((a === b && b === c) || (b === c && c === d)) {
     return bet * 5;
   }
 
-  if (a === b || a === c || a === d || b === c || b === d || c === d) {
+  // 2 match
+  if (
+    a === b || a === c || a === d ||
+    b === c || b === d || c === d
+  ) {
     return bet * 2;
   }
 
+  // lose
   return 0;
-}
+                   }
