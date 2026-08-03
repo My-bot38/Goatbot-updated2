@@ -9,7 +9,7 @@ const baseApiUrl = async () => {
 
 module.exports = {
     config: {
-        name: "fluxpro",
+        name: "flux2",
         version: "2.0",
         author: "OPU",
         countDown: 15,
