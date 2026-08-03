@@ -1,66 +1,80 @@
 const axios = require("axios");
 
-module.exports = {
-  config: {
-    name: "gemini",
-    aliases: ["gmn"],
-    version: "1.2",
-    author: "nexo_here",
-    shortDescription: "Gemini AI with image & text support",
-    longDescription: "Send text or image to Gemini API and get AI response.",
-    category: "ai",
-    guide: "{pn}gemini <text question> or reply to an image",
-  },
-
-  onStart: async function({ api, event, args }) {
-    const uid = 1;
-    const apikey = "66e0cfbb-62b8-4829-90c7-c78cacc72ae2";
-
-    // Check if reply to an image
-    let isReplyToImage = false;
-    let imageUrl = "";
-
-    if (
-      event.messageReply &&
-      event.messageReply.attachments &&
-      event.messageReply.attachments.length > 0 &&
-      event.messageReply.attachments[0].type === "photo"
-    ) {
-      isReplyToImage = true;
-      imageUrl = event.messageReply.attachments[0].url;
-    }
-
-    let payloadUrl = "";
-    if (isReplyToImage) {
-      // Send image url in ask param (or if API supports base64, can do that)
-      // Here assuming API accepts image URL in `ask` param
-      payloadUrl = `https://kaiz-apis.gleeze.com/api/gemini-pro?ask=${encodeURIComponent(imageUrl)}&uid=${uid}&apikey=${apikey}`;
-    } else {
-      if (args.length === 0) {
-        return api.sendMessage(
-          "❌ Please provide a question or reply to an image with a question.",
-          event.threadID,
-          event.messageID
-        );
-      }
-      const textQuery = args.join(" ");
-      payloadUrl = `https://kaiz-apis.gleeze.com/api/gemini-pro?ask=${encodeURIComponent(textQuery)}&uid=${uid}&apikey=${apikey}`;
-    }
-
-    try {
-      const res = await axios.get(payloadUrl);
-      if (res.data && res.data.response) {
-        return api.sendMessage(`\n${res.data.response}`, event.threadID, event.messageID);
-      } else {
-        return api.sendMessage("⚠️ No valid response from Gemini API.", event.threadID, event.messageID);
-      }
-    } catch (err) {
-      console.error("Gemini API error:", err);
-      return api.sendMessage(
-        "❌ Failed to contact Gemini API. Please try again later.",
-        event.threadID,
-        event.messageID
-      );
-    }
-  },
+const baseApiUrl = async () => {
+    const base = await axios.get("https://raw.githubusercontent.com/mahmudx7/HINATA/main/baseApiUrl.json");
+    return base.data.mahmud;
 };
+
+module.exports = {
+    config: {
+        name: "gemini",
+        version: "2.0",
+        author: "OPU",
+        countDown: 5,
+        role: 0,
+        category: "ai",
+        guide: {
+            en: "{pn} <prompt> or reply to an image"
+        }
+    },
+
+    onStart: async function ({ api, event, args, message }) {
+
+        const prompt = args.join(" ");
+        if (!prompt) {
+            return message.reply("❌ Please provide a prompt!");
+        }
+
+        let requestBody = { prompt };
+
+        if (event.type === "message_reply" && event.messageReply.attachments.length > 0) {
+            const attachment = event.messageReply.attachments[0];
+            if (attachment.type === "photo") {
+                requestBody.imageUrl = attachment.url;
+            }
+        }
+
+        return await handleGemini(api, event, requestBody, this.config.name);
+    },
+
+    onReply: async function ({ api, event, Reply, args }) {
+        if (Reply.author !== event.senderID) return;
+
+        const prompt = args.join(" ");
+        if (!prompt) return;
+
+        return await handleGemini(api, event, { prompt }, this.config.name);
+    }
+};
+
+async function handleGemini(api, event, requestBody, commandName) {
+    try {
+        api.setMessageReaction("⏳", event.messageID, () => {}, true);
+
+        const baseUrl = await baseApiUrl();
+        const response = await axios.post(`${baseUrl}/api/gemini`, requestBody, {
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        const replyText = response.data.response || "No response received.";
+
+        api.setMessageReaction("✅", event.messageID, () => {}, true);
+
+        api.sendMessage(replyText, event.threadID, (error, info) => {
+            if (!error) {
+                global.GoatBot.onReply.set(info.messageID, {
+                    commandName: commandName,
+                    author: event.senderID
+                });
+            }
+        }, event.messageID);
+
+    } catch (err) {
+        console.error("Gemini Error:", err);
+        api.setMessageReaction("❌", event.messageID, () => {}, true);
+
+        api.sendMessage("❌ Failed to get response. Try again later.", event.threadID, event.messageID);
+    }
+}
