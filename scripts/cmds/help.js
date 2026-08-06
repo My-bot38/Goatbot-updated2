@@ -47,7 +47,7 @@ module.exports = {
 ┃ ⬤ Total cmds: [ ${commands.size} ].
 ┃ ⬤ Type [ ${prefix}help <cmd> ]
 ┃ to learn the usage.
-┃ ⬤ Owner: 𝗢𝗣𝗨-𝗦𝗘𝗡𝗦𝗘𝗶 🤭
+┃ ⬤ Owner: 𝗢𝗣𝗨-𝗦𝗘𝗡𝗦𝗘𝗶 🔰
 ┗─━─━─━─━─━─━─━─━─━─━─━─━─━─━─━─━─▢
           
            [ NEXORA AI 🤖 ]`;
