@@ -43,7 +43,7 @@ function glowText(ctx, text, x, y, { font, fill, glow, glowBlur = 20, align = "l
 // ---------------------------------------------------------
 // Builds the actual menu image and returns a PNG buffer
 // ---------------------------------------------------------
-async function buildMenuImage({ prefix, role, botName = "MY BOT", ownerName = "OPUSENSEi" }) {
+async function buildMenuImage({ prefix, role, botName = "NEXORA Ai", ownerName = "OPUSENSEi" }) {
   // ---- gather + group commands by category ----
   const categories = {};
   for (const [name, value] of commands) {
