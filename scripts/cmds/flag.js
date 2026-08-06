@@ -17,7 +17,7 @@ module.exports = {
     description: {
       en: "Guess the flag name",
     },
-    category: "fun",
+    category: "game",
     guide: {
       en: "{pn}",
     },
