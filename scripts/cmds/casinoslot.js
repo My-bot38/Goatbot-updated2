@@ -16,7 +16,7 @@ module.exports = {
     countDown: 5
   },
 
-  ST: async function ({ api, event, message, args, usersData }) {
+  onStart: async function ({ api, event, message, args, usersData }) {
     const { threadID, senderID } = event;
     
     const betAmount = parseInt(args[0]) || 100;
