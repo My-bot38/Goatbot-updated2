@@ -173,14 +173,14 @@ module.exports = {
   config: {
     name: "casino",
     version: "2.4.78",
-    author: "Mahi-- | enhanced by ST",
+    author: "Mahi-- | enhanced by opu",
     shortDescription: { en: "Casino world with slots, blackjack, roulette" },
     longDescription: { en: "Play Slots, Blackjack (image), and Roulette (GIF)." },
     category: "Games",
     guide: { en: "{pn} slots <amount>\n{pn} blackjack <amount>\n{pn} roulette <color> <amount>" }
   },
 
-  ST: async function ({ message, event, args, usersData }) {
+  onStart: async function ({ message, event, args, usersData }) {
     const { senderID } = event;
     const user = await usersData.get(senderID) || { money: 0 };
     const game = (args[0] || "").toLowerCase();
