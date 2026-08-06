@@ -1,3 +1,4 @@
+require("dotenv").config();
 const axios = require("axios");
 
 /* ===============================
@@ -9,7 +10,7 @@ const CONFIG = {
   MAX_MEMORY: 20,
   COOLDOWN: 4000,
 
-  API_KEY: "",
+  API_KEY: process.env.OPENROUTER_KEY,
   MODEL: "openrouter/free",
   FALLBACK_MODEL: "mistralai/mistral-7b"
 };
@@ -143,12 +144,11 @@ ${reply}
 module.exports = {
   config: {
     name: "nexora",
-    version: "ULTIMATE",
+    version: "SECURE",
     author: "OPUSENSEI",
     category: "ai"
   },
 
-  // 🔥 PREFIX
   async onStart({ message, args, event }) {
     init();
 
@@ -157,19 +157,17 @@ module.exports = {
 
     if (!input) return message.reply("⚠️ Ask something.");
 
-    // 🧹 clear
     if (input === "clear") {
       Memory.clear(id);
       return message.reply("🧹 Memory cleared.");
     }
 
-    // 🖼️ IMAGE
     if (input.toLowerCase().startsWith("gen image")) {
       const prompt = input.replace(/gen image/i, "").trim();
       if (!prompt) return message.reply("⚠️ prompt dao");
 
       const img = await generateImage(prompt);
-      return message.reply(`🖼️ Image:\n${img}`);
+      return message.reply(`🖼️ ${img}`);
     }
 
     if (Cooldown.check(id)) return;
@@ -194,7 +192,6 @@ module.exports = {
     }
   },
 
-  // 🤖 AUTO
   async onChat({ event, message }) {
     init();
 
@@ -205,7 +202,6 @@ module.exports = {
 
     if (!text.includes(CONFIG.TRIGGER)) return;
 
-    // 🎨 AUTO IMAGE
     if (text.includes("gen image")) {
       const prompt = text.replace("nexora", "").replace("gen image", "").trim();
       if (!prompt) return;
