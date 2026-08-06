@@ -18,7 +18,7 @@ module.exports = {
     countDown: 10
   },
 
-  ST: async function ({ api, event, message }) {
+  onStart: async function ({ api, event, message }) {
     const { threadID } = event;
     
     const loadingMsg = await message.reply("🌊 Generating wave dashboard...");
