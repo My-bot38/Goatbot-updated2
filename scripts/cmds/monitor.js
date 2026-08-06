@@ -11,7 +11,7 @@ module.exports = {
     countDown: 10,
     role: 2,
     shortDescription: "Animora Pro Monitor",
-    category: "info"
+    category: "system"
   },
 
   onStart: async function ({ message }) {
