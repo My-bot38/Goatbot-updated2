@@ -18,7 +18,7 @@ module.exports = {
     countDown: 10
   },
 
-  ST: async function ({ api, event, message }) {
+  onStart: async function ({ api, event, message }) {
     const { threadID } = event;
     
     // Send loading message
@@ -247,7 +247,7 @@ module.exports = {
         api.unsendMessage(loadingMsg.messageID);
         
         api.sendMessage({
-          body: "📊 System Status Dashboard\n━━━━━━━━━━━━━━━━━━━━━\n✨ Animated hexagonal display\n🎨 Real-time system metrics\n⚡ Powered by ST Bot",
+          body: "📊 System Status Dashboard\n━━━━━━━━━━━━━━━━━━━━━\n✨ Animated hexagonal display\n🎨 Real-time system metrics\n⚡ Powered by NEXORA AI 🤖",
           attachment: fs.createReadStream(filePath)
         }, threadID, () => {
           try {
@@ -265,3 +265,5 @@ module.exports = {
     }
   }
 };
+
+        
