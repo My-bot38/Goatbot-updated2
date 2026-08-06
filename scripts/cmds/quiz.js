@@ -15,7 +15,7 @@ module.exports = {
     }
   },
 
-  ST: async function({ message, event, args }) {
+  onStart: async function({ message, event, args }) {
     const languageOptions = {
       "1": { name: "🇧🇩 Bangla", code: "bangla" },
       "2": { name: "🇬🇧 English", code: "english" },
