@@ -181,7 +181,7 @@ module.exports = {
     category: "economy",
     guide: { en: "{pn} <bet_amount>" },
   },
-  ST: async function ({ api, event, message, usersData, args }) {
+  onStart: async function ({ api, event, message, usersData, args }) {
     const betAmount = parseInt(args[0]);
     if (isNaN(betAmount) || betAmount <= 0) {
       return message.reply("Please enter a valid bet amount.");
