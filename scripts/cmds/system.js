@@ -243,7 +243,7 @@ module.exports = {
     category: "system",
     guide: "{p}up"
   },
-  ST: async ({ api, event }) => {
+  onStart: async ({ api, event }) => {
     try {
       const info = await api.getUserInfo(event.senderID);
       const name = info[event.senderID]?.name || "User";
