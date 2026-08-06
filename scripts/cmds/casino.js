@@ -176,7 +176,7 @@ module.exports = {
     author: "Mahi-- | enhanced by opu",
     shortDescription: { en: "Casino world with slots, blackjack, roulette" },
     longDescription: { en: "Play Slots, Blackjack (image), and Roulette (GIF)." },
-    category: "Games",
+    category: "Game",
     guide: { en: "{pn} slots <amount>\n{pn} blackjack <amount>\n{pn} roulette <color> <amount>" }
   },
 
