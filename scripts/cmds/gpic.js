@@ -14,6 +14,7 @@ module.exports = {
         groupAdminOnly: false,
         description: 'Generates a beautiful group picture with all members\' avatars.',
         commandCategory: 'image',
+        category: 'image',
         guide: {
             en: '   {pn}'
         },
