@@ -9,7 +9,7 @@ const CONFIG = {
   MAX_MEMORY: 20,
   COOLDOWN: 4000,
 
-  API_KEY: "PASTE_YOUR_OPENROUTER_KEY",
+  API_KEY: "",
   MODEL: "openrouter/free",
   FALLBACK_MODEL: "mistralai/mistral-7b"
 };
