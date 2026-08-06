@@ -10,7 +10,7 @@ module.exports = {
     version: "10.0",
     author: "OPUSENSEI GLASS UI",
     shortDescription: "Glassmorphism uptime UI",
-    category: "info"
+    category: "system"
   },
 
   onStart: async function ({ message, usersData }) {
