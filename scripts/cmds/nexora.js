@@ -10,7 +10,7 @@ const CONFIG = {
   COOLDOWN: 4000,
 
   API_KEY: "PASTE_YOUR_OPENROUTER_KEY",
-  MODEL: "openai/gpt-4o-mini",
+  MODEL: "openrouter/free",
   FALLBACK_MODEL: "mistralai/mistral-7b"
 };
 
