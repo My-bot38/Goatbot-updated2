@@ -11,7 +11,7 @@ module.exports = {
     shortDescription: {
       en: "🎮 Get a random fun game to play!",
     },
-    category: "fun",
+    category: "game",
     guide: {
       en: "{pn} - Sends a random game idea or mini challenge",
     },
