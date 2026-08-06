@@ -5,7 +5,7 @@ module.exports = {
     version: "1.7",
     author: "ncs pro",
     role: 0,
-    category: "info",
+    category: "system",
     guide: {
       en: "Use {p}uptime to display bot's uptime and user stats."
     }
