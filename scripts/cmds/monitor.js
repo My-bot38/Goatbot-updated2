@@ -51,7 +51,7 @@ module.exports = {
       // Title
       ctx.fillStyle = "#00ffcc";
       ctx.font = "bold 36px Arial";
-      ctx.fillText("Animora AI • System Monitor", 40, 60);
+      ctx.fillText("NEXORA AI 🤖 • System Monitor", 40, 60);
 
       // Box function
       function box(x, y, w, h, title, value) {
