@@ -28,7 +28,7 @@ module.exports = {
     }
   },
 
-  ST: async function({ message, args, event, usersData, getLang, commandName, api }) {
+  onStart: async function({ message, args, event, usersData, getLang, commandName, api }) {
     const { senderID, threadID } = event;
 
     if (!args[0]) {
