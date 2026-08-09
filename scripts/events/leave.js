@@ -3,95 +3,99 @@ const { getTime, drive } = global.utils;
 module.exports = {
 	config: {
 		name: "leave",
-		version: "1.4",
-		author: "NTKhang",
+		version: "2.0",
+		author: "natking mod by opu",
 		category: "events"
 	},
 
 	langs: {
-		vi: {
-			session1: "sáng",
-			session2: "trưa",
-			session3: "chiều",
-			session4: "tối",
-			leaveType1: "tự rời",
-			leaveType2: "bị kick",
-			defaultLeaveMessage: "{userName} đã {type} khỏi nhóm"
-		},
 		en: {
 			session1: "morning",
 			session2: "noon",
 			session3: "afternoon",
-			session4: "evening",
-			leaveType1: "left",
-			leaveType2: "was kicked from",
-			defaultLeaveMessage: "{userName} {type} the group"
+			session4: "night",
+
+			leaveType1: "disconnected",
+			leaveType2: "removed",
+
+			defaultLeaveMessage:
+`⚠️ NEXORA AI SYSTEM
+
+🧠 Monitoring activity...
+❌ User status changed
+
+{userNameTag} has {type} {boxName}
+
+🕒 Time: {time} ({session})
+
+🤖 NEXORA remains active  
+⚡ System stability: Normal`
 		}
 	},
 
 	onStart: async ({ threadsData, message, event, api, usersData, getLang }) => {
 		if (event.logMessageType == "log:unsubscribe")
 			return async function () {
+
 				const { threadID } = event;
 				const threadData = await threadsData.get(threadID);
+
 				if (!threadData.settings.sendLeaveMessage)
 					return;
+
 				const { leftParticipantFbId } = event.logMessageData;
+
+				// ignore if bot leaves
 				if (leftParticipantFbId == api.getCurrentUserID())
 					return;
-				const hours = getTime("HH");
+
+				const hours = +getTime("HH");
 
 				const threadName = threadData.threadName;
 				const userName = await usersData.getName(leftParticipantFbId);
 
-				// {userName}   : name of the user who left the group
-				// {type}       : type of the message (leave)
-				// {boxName}    : name of the box
-				// {threadName} : name of the box
-				// {time}       : time
-				// {session}    : session
-
 				let { leaveMessage = getLang("defaultLeaveMessage") } = threadData.data;
-				const form = {
-					mentions: leaveMessage.match(/\{userNameTag\}/g) ? [{
-						tag: userName,
-						id: leftParticipantFbId
-					}] : null
-				};
+
+				const type = leftParticipantFbId == event.author
+					? getLang("leaveType1")   // self leave
+					: getLang("leaveType2");  // kicked
+
+				const session =
+					hours < 10 ? getLang("session1") :
+					hours < 12 ? getLang("session2") :
+					hours < 18 ? getLang("session3") :
+								 getLang("session4");
+
+				const form = {};
 
 				leaveMessage = leaveMessage
 					.replace(/\{userName\}|\{userNameTag\}/g, userName)
-					.replace(/\{type\}/g, leftParticipantFbId == event.author ? getLang("leaveType1") : getLang("leaveType2"))
+					.replace(/\{type\}/g, type)
 					.replace(/\{threadName\}|\{boxName\}/g, threadName)
 					.replace(/\{time\}/g, hours)
-					.replace(/\{session\}/g, hours <= 10 ?
-						getLang("session1") :
-						hours <= 12 ?
-							getLang("session2") :
-							hours <= 18 ?
-								getLang("session3") :
-								getLang("session4")
-					);
+					.replace(/\{session\}/g, session);
 
 				form.body = leaveMessage;
 
-				if (leaveMessage.includes("{userNameTag}")) {
+				// mention system
+				if (leaveMessage.includes(userName)) {
 					form.mentions = [{
 						id: leftParticipantFbId,
 						tag: userName
 					}];
 				}
 
-				if (threadData.data.leaveAttachment) {
+				// attachment support
+				if (threadData.data.leaveAttachment && threadData.data.leaveAttachment.length > 0) {
 					const files = threadData.data.leaveAttachment;
-					const attachments = files.reduce((acc, file) => {
-						acc.push(drive.getFile(file, "stream"));
-						return acc;
-					}, []);
-					form.attachment = (await Promise.allSettled(attachments))
-						.filter(({ status }) => status == "fulfilled")
+					const attachments = files.map(file => drive.getFile(file, "stream"));
+
+					const settled = await Promise.allSettled(attachments);
+					form.attachment = settled
+						.filter(({ status }) => status === "fulfilled")
 						.map(({ value }) => value);
 				}
+
 				message.send(form);
 			};
 	}
