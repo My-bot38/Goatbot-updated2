@@ -1,132 +1,120 @@
 const { getTime, drive } = global.utils;
-if (!global.temp.welcomeEvent)
-	global.temp.welcomeEvent = {};
 
 module.exports = {
-	config: {
-		name: "welcome",
-		version: "1.7",
-		author: "NTKhang",
-		category: "events"
-	},
+    config: {
+        name: "welcome",
+        version: "2.0",
+        author: "Natking mod by OPu",
+        category: "events"
+    },
 
-	langs: {
-		vi: {
-			session1: "sáng",
-			session2: "trưa",
-			session3: "chiều",
-			session4: "tối",
-			welcomeMessage: "Cảm ơn bạn đã mời tôi vào nhóm!\nPrefix bot: %1\nĐể xem danh sách lệnh hãy nhập: %1help",
-			multiple1: "bạn",
-			multiple2: "các bạn",
-			defaultWelcomeMessage: "Xin chào {userName}.\nChào mừng bạn đến với {boxName}.\nChúc bạn có buổi {session} vui vẻ!"
-		},
-		en: {
-			session1: "morning",
-			session2: "noon",
-			session3: "afternoon",
-			session4: "evening",
-			welcomeMessage: "Thank you for inviting me to the group!\nBot prefix: %1\nTo view the list of commands, please enter: %1help",
-			multiple1: "you",
-			multiple2: "you guys",
-			defaultWelcomeMessage: `Hello {userName}.\nWelcome {multiple} to the chat group: {boxName}\nHave a nice {session} 😊`
-		}
-	},
+    langs: {
+        en: {
+            session1: "morning",
+            session2: "noon",
+            session3: "afternoon",
+            session4: "night",
+            multiple1: "you",
+            multiple2: "everyone",
 
-	onStart: async ({ threadsData, message, event, api, getLang }) => {
-		if (event.logMessageType == "log:subscribe")
-			return async function () {
-				const hours = getTime("HH");
-				const { threadID } = event;
-				const { nickNameBot } = global.GoatBot.config;
-				const prefix = global.utils.getPrefix(threadID);
-				const dataAddedParticipants = event.logMessageData.addedParticipants;
-				// if new member is bot
-				if (dataAddedParticipants.some((item) => item.userFbId == api.getCurrentUserID())) {
-					if (nickNameBot)
-						api.changeNickname(nickNameBot, threadID, api.getCurrentUserID());
-					return message.send(getLang("welcomeMessage", prefix));
-				}
-				// if new member:
-				if (!global.temp.welcomeEvent[threadID])
-					global.temp.welcomeEvent[threadID] = {
-						joinTimeout: null,
-						dataAddedParticipants: []
-					};
+            // 🤖 When bot joins group
+            welcomeMessage:
+`🤖 NEXORA AI ONLINE
 
-				// push new member to array
-				global.temp.welcomeEvent[threadID].dataAddedParticipants.push(...dataAddedParticipants);
-				// if timeout is set, clear it
-				clearTimeout(global.temp.welcomeEvent[threadID].joinTimeout);
+Hello! I'm NEXORA — your intelligent assistant.
+Successfully connected to this group 💫
 
-				// set new timeout
-				global.temp.welcomeEvent[threadID].joinTimeout = setTimeout(async function () {
-					const threadData = await threadsData.get(threadID);
-					if (threadData.settings.sendWelcomeMessage == false)
-						return;
-					const dataAddedParticipants = global.temp.welcomeEvent[threadID].dataAddedParticipants;
-					const dataBanned = threadData.data.banned_ban || [];
-					const threadName = threadData.threadName;
-					const userName = [],
-						mentions = [];
-					let multiple = false;
+💡 You can talk to me naturally — no commands needed
+⚡ I can help, generate, answer & automate tasks instantly
 
-					if (dataAddedParticipants.length > 1)
-						multiple = true;
+🚀 Let's make this group smarter together.`,
 
-					for (const user of dataAddedParticipants) {
-						if (dataBanned.some((item) => item.id == user.userFbId))
-							continue;
-						userName.push(user.fullName);
-						mentions.push({
-							tag: user.fullName,
-							id: user.userFbId
-						});
-					}
-					// {userName}:   name of new member
-					// {multiple}:
-					// {boxName}:    name of group
-					// {threadName}: name of group
-					// {session}:    session of day
-					if (userName.length == 0) return;
-					let { welcomeMessage = getLang("defaultWelcomeMessage") } =
-						threadData.data;
-					const form = {
-						mentions: welcomeMessage.match(/\{userNameTag\}/g) ? mentions : null
-					};
-					welcomeMessage = welcomeMessage
-						.replace(/\{userName\}|\{userNameTag\}/g, userName.join(", "))
-						.replace(/\{boxName\}|\{threadName\}/g, threadName)
-						.replace(
-							/\{multiple\}/g,
-							multiple ? getLang("multiple2") : getLang("multiple1")
-						)
-						.replace(
-							/\{session\}/g,
-							hours <= 10
-								? getLang("session1")
-								: hours <= 12
-									? getLang("session2")
-									: hours <= 18
-										? getLang("session3")
-										: getLang("session4")
-						);
+            // 👥 When user joins
+            defaultWelcomeMessage:
+`✨ NEXORA AI SYSTEM
 
-					form.body = welcomeMessage;
+🧠 Detecting new user...
+✅ Identity confirmed
 
-					if (threadData.data.welcomeAttachment) {
-						const files = threadData.data.welcomeAttachment;
-						const attachments = files.reduce((acc, file) => {
-							acc.push(drive.getFile(file, "stream"));
-							return acc;
-						}, []);
-						form.attachment = (await Promise.allSettled(attachments))
-							.filter(({ status }) => status == "fulfilled")
-							.map(({ value }) => value);
-					}
-					message.send(form);
-					delete global.temp.welcomeEvent[threadID];
-				}, 1500);
-			};
-	}
+Welcome {userNameTag} to {boxName} 💫  
+Have a great {session} 🌙
+
+🤖 NEXORA is now monitoring this space  
+⚡ Smart • Fast • Always Active`
+        }
+    },
+
+    onStart: async ({ threadsData, message, event, api, getLang }) => {
+        if (event.logMessageType !== "log:subscribe")
+            return;
+
+        return async function () {
+            const { threadID } = event;
+            const { addedParticipants } = event.logMessageData;
+            if (!addedParticipants || addedParticipants.length === 0)
+                return;
+
+            const botID = api.getCurrentUserID();
+
+            // 🤖 Case 1: Bot added
+            if (addedParticipants.some(item => item.userFbId == botID)) {
+                return message.send(getLang("welcomeMessage"));
+            }
+
+            // 👥 Case 2: User joined
+            let threadData;
+            try {
+                threadData = await threadsData.get(threadID);
+            } catch (e) {
+                return;
+            }
+
+            if (!threadData.settings.sendWelcomeMessage)
+                return;
+
+            const hours = +getTime("HH");
+            const session =
+                hours < 10 ? getLang("session1") :
+                hours < 12 ? getLang("session2") :
+                hours < 18 ? getLang("session3") :
+                             getLang("session4");
+
+            const isMultiple = addedParticipants.length > 1;
+            const multiple = isMultiple ? getLang("multiple2") : getLang("multiple1");
+            const threadName = threadData.threadName;
+
+            let { welcomeMessage = getLang("defaultWelcomeMessage") } = threadData.data;
+
+            const hasMentionTag = welcomeMessage.includes("{userNameTag}");
+            const mentions = hasMentionTag
+                ? addedParticipants.map(u => ({ tag: u.fullName, id: u.userFbId }))
+                : null;
+
+            const namesList = addedParticipants.map(u => u.fullName).join(", ");
+            const firstName = addedParticipants[0].fullName;
+
+            welcomeMessage = welcomeMessage
+                .replace(/\{userName\}/g, isMultiple ? namesList : firstName)
+                .replace(/\{userNameTag\}/g, isMultiple ? namesList : firstName)
+                .replace(/\{multiple\}/g, multiple)
+                .replace(/\{boxName\}|\{threadName\}/g, threadName)
+                .replace(/\{session\}/g, session);
+
+            const form = { body: welcomeMessage };
+            if (mentions) form.mentions = mentions;
+
+            // 📎 Attachment support
+            if (threadData.data.welcomeAttachment && threadData.data.welcomeAttachment.length > 0) {
+                const streams = threadData.data.welcomeAttachment.map(fileId =>
+                    drive.getFile(fileId, "stream")
+                );
+                const settled = await Promise.allSettled(streams);
+                form.attachment = settled
+                    .filter(({ status }) => status === "fulfilled")
+                    .map(({ value }) => value);
+            }
+
+            message.send(form);
+        };
+    }
 };
